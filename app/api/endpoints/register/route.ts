@@ -93,9 +93,13 @@ export async function POST(req: NextRequest) {
   const payload = {
     originUrl: body.originUrl,
     price: body.price,
-    walletAddress: body.authorization.from, // payment wallet = who signed
+    walletAddress: body.authorization.from,
     pathPattern: body.pathPattern || "/*",
-    originHeaders: isRecordOfStrings(body.originHeaders) ? body.originHeaders : undefined
+    originHeaders: isRecordOfStrings(body.originHeaders) ? body.originHeaders : undefined,
+  }
+
+  if (!payload.walletAddress) {
+    return NextResponse.json({ error: "Payment wallet address missing." }, { status: 400 })
   }
 
   try {
