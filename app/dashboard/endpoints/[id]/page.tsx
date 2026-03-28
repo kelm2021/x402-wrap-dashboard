@@ -1,60 +1,21 @@
 import Link from "next/link"
-import { auth } from "@clerk/nextjs/server"
 import UsageChart from "@/components/UsageChart"
-import { getUserEndpoints } from "@/lib/kv"
+import { getEndpointById } from "@/lib/kv"
 import { getEmptyUsage, getUsage } from "@/lib/proxy-client"
-
-interface EndpointDetail {
-  endpointId: string
-  proxyUrl: string
-  price: string
-  walletAddress: string
-  originUrl: string
-  pathPattern: string
-  createdAt: string
-  usage: {
-    totalRequests: number
-    totalRevenue: string
-    dailyStats: { date: string; requests: number; revenue: string }[]
-    recentEvents: { path: string; method: string; amount: string; timestamp: string }[]
-  }
-}
-
-async function getEndpoint(id: string): Promise<EndpointDetail | null> {
-  const { userId } = auth()
-
-  if (!userId) {
-    return null
-  }
-
-  const endpoints = await getUserEndpoints(userId)
-  const endpoint = endpoints.find((entry) => entry.endpointId === id)
-
-  if (!endpoint) {
-    return null
-  }
-
-  try {
-    const usage = await getUsage(endpoint.endpointId)
-    return { ...endpoint, usage }
-  } catch {
-    return { ...endpoint, usage: getEmptyUsage() }
-  }
-}
 
 export default async function EndpointDetailPage({
   params
 }: {
   params: { id: string }
 }) {
-  const endpoint = await getEndpoint(params.id)
+  const endpoint = await getEndpointById(params.id)
 
   if (!endpoint) {
     return (
       <section className="rounded-3xl border border-gray-800 bg-gray-900/70 p-10">
         <h1 className="text-2xl font-semibold text-white">Endpoint not found</h1>
         <p className="mt-3 text-sm text-gray-400">
-          The endpoint may not belong to this account or has not been synced yet.
+          Check the endpoint ID and try again.
         </p>
         <Link
           href="/dashboard"
@@ -64,6 +25,13 @@ export default async function EndpointDetailPage({
         </Link>
       </section>
     )
+  }
+
+  let usage = getEmptyUsage()
+  try {
+    usage = await getUsage(endpoint.endpointId)
+  } catch {
+    // fallback to empty
   }
 
   return (
@@ -76,18 +44,10 @@ export default async function EndpointDetailPage({
             <p className="mt-2 text-sm text-gray-400">{endpoint.originUrl}</p>
           </div>
           <div className="grid gap-3 text-sm text-gray-300">
-            <div>
-              <span className="text-gray-500">Proxy URL:</span> {endpoint.proxyUrl}
-            </div>
-            <div>
-              <span className="text-gray-500">Price:</span> {endpoint.price} USDC
-            </div>
-            <div>
-              <span className="text-gray-500">Path pattern:</span> {endpoint.pathPattern}
-            </div>
-            <div>
-              <span className="text-gray-500">Wallet:</span> {endpoint.walletAddress}
-            </div>
+            <div><span className="text-gray-500">Proxy URL:</span> {endpoint.proxyUrl}</div>
+            <div><span className="text-gray-500">Price:</span> {endpoint.price} USDC</div>
+            <div><span className="text-gray-500">Path pattern:</span> {endpoint.pathPattern}</div>
+            <div><span className="text-gray-500">Wallet:</span> {endpoint.walletAddress}</div>
           </div>
         </div>
       </div>
@@ -97,11 +57,10 @@ export default async function EndpointDetailPage({
           <div className="mb-5">
             <h2 className="text-lg font-semibold text-white">Requests, last 7 days</h2>
             <p className="mt-1 text-sm text-gray-400">
-              Total requests: {endpoint.usage.totalRequests} | Revenue: {endpoint.usage.totalRevenue}
-              {" "}USDC
+              Total requests: {usage.totalRequests} | Revenue: {usage.totalRevenue} USDC
             </p>
           </div>
-          <UsageChart data={endpoint.usage.dailyStats.slice(-7)} />
+          <UsageChart data={usage.dailyStats.slice(-7)} />
         </div>
 
         <div className="rounded-3xl border border-gray-800 bg-gray-900/70 p-6">
@@ -113,7 +72,7 @@ export default async function EndpointDetailPage({
             </div>
             <div className="rounded-2xl border border-gray-800 bg-black/20 p-4">
               <p className="text-gray-500">Recent event count</p>
-              <p className="mt-2 text-white">{endpoint.usage.recentEvents.length}</p>
+              <p className="mt-2 text-white">{usage.recentEvents.length}</p>
             </div>
           </div>
         </div>
@@ -132,18 +91,14 @@ export default async function EndpointDetailPage({
               </tr>
             </thead>
             <tbody>
-              {endpoint.usage.recentEvents.length === 0 ? (
+              {usage.recentEvents.length === 0 ? (
                 <tr>
-                  <td className="py-4 text-gray-400" colSpan={4}>
-                    No recent events yet.
-                  </td>
+                  <td className="py-4 text-gray-400" colSpan={4}>No recent events yet.</td>
                 </tr>
               ) : (
-                endpoint.usage.recentEvents.map((event) => (
+                usage.recentEvents.map((event) => (
                   <tr key={`${event.timestamp}-${event.path}`} className="border-t border-gray-800">
-                    <td className="py-4 pr-6 text-gray-300">
-                      {new Date(event.timestamp).toLocaleString()}
-                    </td>
+                    <td className="py-4 pr-6 text-gray-300">{new Date(event.timestamp).toLocaleString()}</td>
                     <td className="py-4 pr-6 text-gray-300">{event.method}</td>
                     <td className="py-4 pr-6 text-gray-300">{event.path}</td>
                     <td className="py-4 text-gray-300">{event.amount} USDC</td>

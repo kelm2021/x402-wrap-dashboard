@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@clerk/nextjs/server"
-import { addEndpointToUser } from "@/lib/kv"
+import { saveEndpoint } from "@/lib/kv"
 import { registerEndpoint } from "@/lib/proxy-client"
 
 interface RegisterPayload {
@@ -20,12 +19,6 @@ function isRecordOfStrings(value: unknown): value is Record<string, string> {
 }
 
 export async function POST(req: NextRequest) {
-  const { userId } = auth()
-
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
-
   const body = (await req.json()) as RegisterPayload
 
   if (!body.originUrl || !body.price || !body.walletAddress) {
@@ -52,7 +45,7 @@ export async function POST(req: NextRequest) {
   try {
     const endpoint = await registerEndpoint(payload)
 
-    await addEndpointToUser(userId, {
+    await saveEndpoint({
       endpointId: endpoint.endpointId,
       proxyUrl: endpoint.proxyUrl,
       price: endpoint.price,

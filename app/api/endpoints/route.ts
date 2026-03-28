@@ -1,27 +1,25 @@
-import { NextResponse } from "next/server"
-import { auth } from "@clerk/nextjs/server"
-import { getUserEndpoints } from "@/lib/kv"
+import { NextRequest, NextResponse } from "next/server"
+import { getEndpointById } from "@/lib/kv"
 import { getEmptyUsage, getUsage } from "@/lib/proxy-client"
 
-export async function GET() {
-  const { userId } = auth()
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url)
+  const id = searchParams.get("id")
 
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  if (!id) {
+    return NextResponse.json({ error: "id query param required." }, { status: 400 })
   }
 
-  const endpoints = await getUserEndpoints(userId)
+  const endpoint = await getEndpointById(id)
 
-  const merged = await Promise.all(
-    endpoints.map(async (endpoint) => {
-      try {
-        const usage = await getUsage(endpoint.endpointId)
-        return { ...endpoint, usage }
-      } catch {
-        return { ...endpoint, usage: getEmptyUsage() }
-      }
-    })
-  )
+  if (!endpoint) {
+    return NextResponse.json({ error: "Endpoint not found." }, { status: 404 })
+  }
 
-  return NextResponse.json(merged)
+  try {
+    const usage = await getUsage(id)
+    return NextResponse.json({ ...endpoint, usage })
+  } catch {
+    return NextResponse.json({ ...endpoint, usage: getEmptyUsage() })
+  }
 }

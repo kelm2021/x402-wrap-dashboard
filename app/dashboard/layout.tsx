@@ -1,5 +1,4 @@
 import Link from "next/link"
-import { UserButton } from "@clerk/nextjs"
 
 export default function DashboardLayout({
   children
@@ -23,7 +22,6 @@ export default function DashboardLayout({
               </Link>
             </nav>
           </div>
-          <UserButton afterSignOutUrl="/" />
         </div>
       </header>
       <div className="mx-auto max-w-6xl px-6 py-10">{children}</div>

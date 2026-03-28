@@ -17,21 +17,12 @@ export interface StoredEndpoint {
   createdAt: string
 }
 
-export async function getUserEndpoints(userId: string): Promise<StoredEndpoint[]> {
-  if (!redis) {
-    return []
-  }
-
-  const data = await redis.get<StoredEndpoint[]>(`user:${userId}:endpoints`)
-  return data || []
+export async function getEndpointById(endpointId: string): Promise<StoredEndpoint | null> {
+  if (!redis) return null
+  return redis.get<StoredEndpoint>(`endpoint:${endpointId}`)
 }
 
-export async function addEndpointToUser(userId: string, endpoint: StoredEndpoint): Promise<void> {
-  if (!redis) {
-    return
-  }
-
-  const existing = await getUserEndpoints(userId)
-  existing.push(endpoint)
-  await redis.set(`user:${userId}:endpoints`, existing)
+export async function saveEndpoint(endpoint: StoredEndpoint): Promise<void> {
+  if (!redis) return
+  await redis.set(`endpoint:${endpoint.endpointId}`, endpoint)
 }
