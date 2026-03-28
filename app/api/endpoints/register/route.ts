@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
-import { saveEndpoint } from "@/lib/kv"
+import { getSession } from "@/lib/auth"
+import { saveEndpoint, addEndpointToWallet } from "@/lib/kv"
 import { registerEndpoint } from "@/lib/proxy-client"
 
 interface RegisterPayload {
   originUrl?: string
   price?: string
-  walletAddress?: string
   pathPattern?: string
   originHeaders?: Record<string, string>
 }
@@ -19,11 +19,16 @@ function isRecordOfStrings(value: unknown): value is Record<string, string> {
 }
 
 export async function POST(req: NextRequest) {
+  const session = await getSession()
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized — connect wallet first." }, { status: 401 })
+  }
+
   const body = (await req.json()) as RegisterPayload
 
-  if (!body.originUrl || !body.price || !body.walletAddress) {
+  if (!body.originUrl || !body.price) {
     return NextResponse.json(
-      { error: "originUrl, price, and walletAddress are required." },
+      { error: "originUrl and price are required." },
       { status: 400 }
     )
   }
@@ -37,7 +42,7 @@ export async function POST(req: NextRequest) {
   const payload = {
     originUrl: body.originUrl,
     price: body.price,
-    walletAddress: body.walletAddress,
+    walletAddress: session.walletAddress, // always from session, not request body
     pathPattern: body.pathPattern || "/*",
     originHeaders: isRecordOfStrings(body.originHeaders) ? body.originHeaders : undefined
   }
@@ -54,6 +59,8 @@ export async function POST(req: NextRequest) {
       pathPattern: endpoint.pathPattern,
       createdAt: endpoint.createdAt
     })
+
+    await addEndpointToWallet(session.walletAddress, endpoint.endpointId)
 
     return NextResponse.json(endpoint, { status: 201 })
   } catch (error) {
