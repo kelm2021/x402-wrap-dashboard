@@ -23,10 +23,10 @@ export default function LandingPage() {
           x402-wrap
         </Link>
         <Link
-          href="/sign-in"
+          href="/dashboard"
           className="rounded-full border border-gray-800 px-4 py-2 text-sm text-gray-200 transition hover:border-purple-500 hover:text-white"
         >
-          Sign In
+          Connect Wallet
         </Link>
       </header>
 
@@ -44,16 +44,10 @@ export default function LandingPage() {
           </p>
           <div className="mt-10 flex flex-col gap-4 sm:flex-row">
             <Link
-              href="/sign-up"
+              href="/dashboard"
               className="inline-flex items-center justify-center rounded-full bg-purple-600 px-6 py-3 text-sm font-medium text-white transition hover:bg-purple-500"
             >
               Get Started
-            </Link>
-            <Link
-              href="/sign-in"
-              className="inline-flex items-center justify-center rounded-full border border-gray-800 px-6 py-3 text-sm font-medium text-gray-200 transition hover:border-gray-700 hover:text-white"
-            >
-              Existing account
             </Link>
           </div>
         </div>
