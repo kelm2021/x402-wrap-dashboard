@@ -20,8 +20,8 @@ export async function GET() {
 
   // Build the unsigned authorization for client to sign
   const now = Math.floor(Date.now() / 1000)
-  const validAfter = (BigInt(now) - 600n).toString()
-  const validBefore = (BigInt(now) + BigInt(req.maxTimeoutSeconds)).toString()
+  const validAfter = String(now - 600)
+  const validBefore = String(now + req.maxTimeoutSeconds)
   const nonce = `0x${Array.from(crypto.getRandomValues(new Uint8Array(32))).map(b => b.toString(16).padStart(2, "0")).join("")}`
 
   return NextResponse.json({
