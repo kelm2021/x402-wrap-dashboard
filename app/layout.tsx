@@ -1,6 +1,8 @@
 import type { Metadata } from "next"
-import Providers from "@/components/Providers"
+import dynamic from "next/dynamic"
 import "./globals.css"
+
+const Providers = dynamic(() => import("@/components/Providers"), { ssr: false })
 
 export const metadata: Metadata = {
   title: "x402-wrap Dashboard",
