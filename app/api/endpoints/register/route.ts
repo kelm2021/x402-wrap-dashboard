@@ -47,8 +47,10 @@ export async function POST(req: NextRequest) {
     originHeaders: isRecordOfStrings(body.originHeaders) ? body.originHeaders : undefined
   }
 
+  const paymentHeader = req.headers.get("X-Payment-Header")
+
   try {
-    const endpoint = await registerEndpoint(payload)
+    const endpoint = await registerEndpoint(payload, paymentHeader ?? undefined)
 
     await saveEndpoint({
       endpointId: endpoint.endpointId,

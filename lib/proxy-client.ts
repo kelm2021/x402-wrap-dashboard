@@ -42,12 +42,19 @@ function buildErrorMessage(prefix: string, details: string): string {
   return `${prefix}${details ? `: ${details}` : ""}`
 }
 
-export async function registerEndpoint(data: RegisterRequest): Promise<RegisterResponse> {
+export async function registerEndpoint(data: RegisterRequest, paymentHeader?: string): Promise<RegisterResponse> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" }
+  if (paymentHeader) headers["X-PAYMENT"] = paymentHeader
+
   const res = await fetch(`${PROXY_API_URL}/register`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify(data)
   })
+
+  if (res.status === 402) {
+    throw new Error("Payment required — please complete the $1 USDC payment in your wallet.")
+  }
 
   if (!res.ok) {
     throw new Error(buildErrorMessage("Failed to register endpoint", await res.text()))
