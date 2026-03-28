@@ -62,7 +62,7 @@ function encodePaymentHeader(
     }
   }
   // base64url encode (URL-safe, no padding issues)
-  return Buffer.from(JSON.stringify(payment)).toString("base64")
+  return Buffer.from(JSON.stringify(payment)).toString("base64url")
 }
 
 export async function POST(req: NextRequest) {

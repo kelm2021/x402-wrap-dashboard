@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 
 const PROXY_API_URL = process.env.PROXY_API_URL || "https://wrap-api.aurelianflo.com"
 
+export const dynamic = "force-dynamic"
+
 export async function GET() {
   // Fetch the 402 challenge from proxy to get payment requirements
   const res = await fetch(`${PROXY_API_URL}/register`, {
