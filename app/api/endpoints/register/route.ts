@@ -8,6 +8,28 @@ interface RegisterPayload {
   price?: string
   pathPattern?: string
   originHeaders?: Record<string, string>
+  // x402 payment fields
+  signature?: string
+  authorization?: {
+    from: string
+    to: string
+    value: string
+    validAfter: string
+    validBefore: string
+    nonce: string
+  }
+  paymentRequirements?: {
+    scheme: string
+    network: string
+    maxAmountRequired: string
+    resource: string
+    description: string
+    mimeType: string
+    payTo: string
+    maxTimeoutSeconds: number
+    asset: string
+    extra: { name: string; version: string } | null
+  }
 }
 
 function isRecordOfStrings(value: unknown): value is Record<string, string> {
@@ -16,6 +38,31 @@ function isRecordOfStrings(value: unknown): value is Record<string, string> {
       typeof value === "object" &&
       Object.values(value as Record<string, unknown>).every((entry) => typeof entry === "string")
   )
+}
+
+function encodePaymentHeader(
+  signature: string,
+  authorization: NonNullable<RegisterPayload["authorization"]>,
+  paymentRequirements: NonNullable<RegisterPayload["paymentRequirements"]>
+): string {
+  const payment = {
+    x402Version: 1,
+    scheme: paymentRequirements.scheme,
+    network: paymentRequirements.network,
+    payload: {
+      signature,
+      authorization: {
+        from: authorization.from,
+        to: authorization.to,
+        value: authorization.value,
+        validAfter: authorization.validAfter,
+        validBefore: authorization.validBefore,
+        nonce: authorization.nonce,
+      }
+    }
+  }
+  // base64url encode (URL-safe, no padding issues)
+  return Buffer.from(JSON.stringify(payment)).toString("base64")
 }
 
 export async function POST(req: NextRequest) {
@@ -27,10 +74,7 @@ export async function POST(req: NextRequest) {
   const body = (await req.json()) as RegisterPayload
 
   if (!body.originUrl || !body.price) {
-    return NextResponse.json(
-      { error: "originUrl and price are required." },
-      { status: 400 }
-    )
+    return NextResponse.json({ error: "originUrl and price are required." }, { status: 400 })
   }
 
   try {
@@ -39,18 +83,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "originUrl must be a valid URL." }, { status: 400 })
   }
 
+  if (!body.signature || !body.authorization || !body.paymentRequirements) {
+    return NextResponse.json({ error: "Payment signature required." }, { status: 402 })
+  }
+
+  // Encode x402 payment header server-side
+  const paymentHeader = encodePaymentHeader(body.signature, body.authorization, body.paymentRequirements)
+
   const payload = {
     originUrl: body.originUrl,
     price: body.price,
-    walletAddress: session.walletAddress, // always from session, not request body
+    walletAddress: body.authorization.from, // payment wallet = who signed
     pathPattern: body.pathPattern || "/*",
     originHeaders: isRecordOfStrings(body.originHeaders) ? body.originHeaders : undefined
   }
 
-  const paymentHeader = req.headers.get("X-Payment-Header")
-
   try {
-    const endpoint = await registerEndpoint(payload, paymentHeader ?? undefined)
+    const endpoint = await registerEndpoint(payload, paymentHeader)
 
     await saveEndpoint({
       endpointId: endpoint.endpointId,
