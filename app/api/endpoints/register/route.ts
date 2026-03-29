@@ -83,12 +83,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "originUrl must be a valid URL." }, { status: 400 })
   }
 
-  if (!body.signature || !body.authorization || !body.paymentRequirements) {
-    return NextResponse.json({ error: "Payment signature required." }, { status: 402 })
-  }
-
-  // Encode x402 payment header server-side
-  const paymentHeader = encodePaymentHeader(body.signature, body.authorization, body.paymentRequirements)
+  const paymentHeader = body.signature && body.authorization && body.paymentRequirements
+    ? encodePaymentHeader(body.signature, body.authorization, body.paymentRequirements)
+    : undefined
 
   const payload = {
     originUrl: body.originUrl,

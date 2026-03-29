@@ -12,6 +12,11 @@ export async function GET() {
     body: JSON.stringify({ originUrl: "https://placeholder.invalid", price: "0", walletAddress: "0x0000000000000000000000000000000000000000" })
   })
 
+  // If registration is free (200 response), return free flag
+  if (res.status === 200 || res.status === 400) {
+    return NextResponse.json({ free: true })
+  }
+
   if (res.status !== 402) {
     return NextResponse.json({ error: "Expected 402 from proxy" }, { status: 500 })
   }

@@ -84,25 +84,32 @@ export default function RegisterForm() {
       if (!challengeRes.ok) throw new Error("Failed to fetch payment details.")
       const challenge = await challengeRes.json()
 
-      // Step 2: Sign the typed data
-      setStep("Sign in your wallet…")
-      const typedData = challenge.typedData
-      const authorization = {
-        ...challenge.authorization,
-        from: paymentWallet, // payment wallet (may differ from auth wallet)
+      let signature = undefined
+      let authorization = undefined
+      let paymentRequirements = undefined
+
+      if (!challenge.free) {
+        // Step 2: Sign the typed data
+        setStep("Sign in your wallet…")
+        const typedData = challenge.typedData
+        authorization = {
+          ...challenge.authorization,
+          from: paymentWallet,
+        }
+        paymentRequirements = challenge.paymentRequirements
+
+        signature = await signTypedDataAsync({
+          domain: typedData.domain,
+          types: typedData.types,
+          primaryType: "TransferWithAuthorization",
+          message: {
+            ...typedData.message,
+            from: paymentWallet,
+          },
+        })
       }
 
-      const signature = await signTypedDataAsync({
-        domain: typedData.domain,
-        types: typedData.types,
-        primaryType: "TransferWithAuthorization",
-        message: {
-          ...typedData.message,
-          from: paymentWallet,
-        },
-      })
-
-      // Step 3: Submit to our API with signature
+      // Step 3: Submit to our API
       setStep("Registering endpoint…")
       const res = await fetch("/api/endpoints/register", {
         method: "POST",
@@ -112,9 +119,7 @@ export default function RegisterForm() {
           price,
           pathPattern: pathPattern || "/*",
           originHeaders: parsedHeaders,
-          signature,
-          authorization,
-          paymentRequirements: challenge.paymentRequirements,
+          ...(signature && { signature, authorization, paymentRequirements }),
         })
       })
 

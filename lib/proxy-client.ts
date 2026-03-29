@@ -53,7 +53,7 @@ export async function registerEndpoint(data: RegisterRequest, paymentHeader?: st
   })
 
   if (res.status === 402) {
-    throw new Error("Payment required — please complete the $1 USDC payment in your wallet.")
+    throw new Error("Payment required — please complete the USDC payment in your wallet.")
   }
 
   if (!res.ok) {
