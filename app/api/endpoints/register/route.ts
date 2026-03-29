@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
   const payload = {
     originUrl: body.originUrl,
     price: body.price,
-    walletAddress: body.authorization.from,
+    walletAddress: body.authorization?.from ?? session.walletAddress,
     pathPattern: body.pathPattern || "/*",
     originHeaders: isRecordOfStrings(body.originHeaders) ? body.originHeaders : undefined,
   }
