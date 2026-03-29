@@ -136,7 +136,7 @@ export default function RegisterForm() {
   return (
     <div className="space-y-6">
       <div className="rounded-2xl border border-yellow-500/20 bg-yellow-500/5 px-5 py-3 text-sm text-yellow-300">
-        Registration costs <strong>$1 USDC</strong> on Base — paid from the payment wallet below.
+        Registration costs <strong>$2 USDC</strong> on Base — paid from the payment wallet below.
       </div>
 
       <form onSubmit={handleSubmit} className="rounded-3xl border border-gray-800 bg-gray-900/70 p-6 sm:p-8 space-y-6">
@@ -153,7 +153,7 @@ export default function RegisterForm() {
             value={paymentWallet}
             onChange={setPaymentWallet}
             error={errors.paymentWallet}
-            hint="Receives per-request earnings. Pays the $1 registration fee."
+            hint="Receives per-request earnings. Pays the $2 registration fee."
           />
         </div>
 
@@ -177,7 +177,7 @@ export default function RegisterForm() {
 
         <button type="submit" disabled={isSubmitting}
           className="inline-flex rounded-full bg-purple-600 px-6 py-3 text-sm font-medium text-white transition hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-60">
-          {isSubmitting ? step || "Processing…" : "Register Endpoint ($1 USDC)"}
+          {isSubmitting ? step || "Processing…" : "Register Endpoint ($2 USDC)"}
         </button>
       </form>
 
