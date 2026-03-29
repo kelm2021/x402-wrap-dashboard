@@ -12,9 +12,14 @@ export async function GET() {
     body: JSON.stringify({ originUrl: "https://placeholder.invalid", price: "0", walletAddress: "0x0000000000000000000000000000000000000000" })
   })
 
-  // If registration is free (200 response), return free flag
-  if (res.status === 200 || res.status === 400) {
+  // If registration is free, proxy returns 200.
+  if (res.status === 200) {
     return NextResponse.json({ free: true })
+  }
+
+  if (res.status === 400) {
+    const details = await res.text()
+    return NextResponse.json({ error: `Invalid registration probe: ${details}` }, { status: 500 })
   }
 
   if (res.status !== 402) {
