@@ -5,8 +5,8 @@ import "./globals.css"
 const Providers = dynamic(() => import("@/components/Providers"), { ssr: false })
 
 export const metadata: Metadata = {
-  title: "x402-wrap Dashboard",
-  description: "Monetize any API with USDC payments."
+  title: "AurelianFlo Wrapped Dashboard",
+  description: "Monetize any API with x402 and USDC using AurelianFlo Wrapped."
 }
 
 export default function RootLayout({
@@ -16,7 +16,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="bg-surface text-white antialiased">
+      <body className="bg-[#121210] text-white antialiased">
         <Providers>
           {children}
         </Providers>

@@ -1,35 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getSession } from "@/lib/auth"
 import { saveEndpoint, addEndpointToWallet } from "@/lib/kv"
-import { registerEndpoint } from "@/lib/proxy-client"
+import { createRegistrationIntent } from "@/lib/proxy-client"
 
 interface RegisterPayload {
   originUrl?: string
   price?: string
   pathPattern?: string
   originHeaders?: Record<string, string>
-  // x402 payment fields
-  signature?: string
-  authorization?: {
-    from: string
-    to: string
-    value: string
-    validAfter: string
-    validBefore: string
-    nonce: string
-  }
-  paymentRequirements?: {
-    scheme: string
-    network: string
-    maxAmountRequired: string
-    resource: string
-    description: string
-    mimeType: string
-    payTo: string
-    maxTimeoutSeconds: number
-    asset: string
-    extra: { name: string; version: string } | null
-  }
+  visibility?: "private" | "public"
 }
 
 function isRecordOfStrings(value: unknown): value is Record<string, string> {
@@ -40,35 +19,10 @@ function isRecordOfStrings(value: unknown): value is Record<string, string> {
   )
 }
 
-function encodePaymentHeader(
-  signature: string,
-  authorization: NonNullable<RegisterPayload["authorization"]>,
-  paymentRequirements: NonNullable<RegisterPayload["paymentRequirements"]>
-): string {
-  const payment = {
-    x402Version: 1,
-    scheme: paymentRequirements.scheme,
-    network: paymentRequirements.network,
-    payload: {
-      signature,
-      authorization: {
-        from: authorization.from,
-        to: authorization.to,
-        value: authorization.value,
-        validAfter: authorization.validAfter,
-        validBefore: authorization.validBefore,
-        nonce: authorization.nonce,
-      }
-    }
-  }
-  // base64url encode (URL-safe, no padding issues)
-  return Buffer.from(JSON.stringify(payment)).toString("base64url")
-}
-
 export async function POST(req: NextRequest) {
   const session = await getSession()
   if (!session) {
-    return NextResponse.json({ error: "Unauthorized — connect wallet first." }, { status: 401 })
+    return NextResponse.json({ error: "Unauthorized - connect wallet first." }, { status: 401 })
   }
 
   const body = (await req.json()) as RegisterPayload
@@ -83,16 +37,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "originUrl must be a valid URL." }, { status: 400 })
   }
 
-  const paymentHeader = body.signature && body.authorization && body.paymentRequirements
-    ? encodePaymentHeader(body.signature, body.authorization, body.paymentRequirements)
-    : undefined
-
   const payload = {
     originUrl: body.originUrl,
     price: body.price,
-    walletAddress: body.authorization?.from ?? session.walletAddress,
+    walletAddress: session.walletAddress,
     pathPattern: body.pathPattern || "/*",
     originHeaders: isRecordOfStrings(body.originHeaders) ? body.originHeaders : undefined,
+    visibility: body.visibility || "private",
   }
 
   if (!payload.walletAddress) {
@@ -100,16 +51,24 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const endpoint = await registerEndpoint(payload, paymentHeader)
+    const endpoint = await createRegistrationIntent(payload)
 
     await saveEndpoint({
       endpointId: endpoint.endpointId,
       proxyUrl: endpoint.proxyUrl,
-      price: endpoint.price,
-      walletAddress: endpoint.walletAddress,
-      originUrl: endpoint.originUrl,
-      pathPattern: endpoint.pathPattern,
-      createdAt: endpoint.createdAt
+      price: payload.price,
+      walletAddress: payload.walletAddress,
+      originUrl: payload.originUrl,
+      pathPattern: payload.pathPattern,
+      createdAt: new Date().toISOString(),
+      status: endpoint.status,
+      visibility: endpoint.visibility,
+      verificationPath: endpoint.verificationPath,
+      verificationUrl: endpoint.verificationUrl,
+      verifiedAt: null,
+      activatedAt: null,
+      paymentTxHash: null,
+      activationTxHash: null,
     })
 
     await addEndpointToWallet(session.walletAddress, endpoint.endpointId)

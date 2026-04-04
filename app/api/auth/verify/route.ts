@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "address, signature, and nonce required." }, { status: 400 })
   }
 
-  const message = `Sign in to x402-wrap: ${nonce}`
+  const message = `Sign in to AurelianFlo Wrapped: ${nonce}`
 
   let valid = false
   try {

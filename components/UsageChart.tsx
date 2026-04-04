@@ -35,13 +35,13 @@ export default function UsageChart({ data }: UsageChartProps) {
                 width={barWidth}
                 height={barHeight}
                 rx="10"
-                className="fill-purple-600"
+                className="fill-[#C8942A]"
               />
               <text
                 x={x + barWidth / 2}
                 y={height - 6}
                 textAnchor="middle"
-                className="fill-gray-500 text-[11px]"
+                className="fill-[#8C857A] text-[11px]"
               >
                 {new Date(item.date).toLocaleDateString(undefined, { weekday: "short" })}
               </text>
@@ -49,7 +49,7 @@ export default function UsageChart({ data }: UsageChartProps) {
                 x={x + barWidth / 2}
                 y={y - 8}
                 textAnchor="middle"
-                className="fill-gray-300 text-[11px]"
+                className="fill-[#F5F0E8] text-[11px]"
               >
                 {item.requests}
               </text>
@@ -57,8 +57,8 @@ export default function UsageChart({ data }: UsageChartProps) {
           )
         })}
       </svg>
-      <div className="flex items-center gap-2 text-xs text-gray-400">
-        <span className="inline-block h-3 w-3 rounded-full bg-purple-600" />
+      <div className="flex items-center gap-2 text-xs text-[#A8A29E]">
+        <span className="inline-block h-3 w-3 rounded-full bg-[#C8942A]" />
         Requests per day
       </div>
     </div>

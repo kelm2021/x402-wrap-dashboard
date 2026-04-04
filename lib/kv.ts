@@ -1,11 +1,19 @@
 import { Redis } from "@upstash/redis"
+import { getOptionalServerEnv, getRequiredServerEnv } from "@/lib/env"
 
-const redis = process.env.UPSTASH_REDIS_REST_URL
-  ? new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL,
-      token: process.env.UPSTASH_REDIS_REST_TOKEN!
-    })
-  : null
+const redisUrl = getOptionalServerEnv("UPSTASH_REDIS_REST_URL")
+const redisToken = getOptionalServerEnv("UPSTASH_REDIS_REST_TOKEN")
+
+function createRedisClient(): Redis | null {
+  if (!redisUrl && !redisToken) return null
+
+  return new Redis({
+    url: getRequiredServerEnv("UPSTASH_REDIS_REST_URL"),
+    token: getRequiredServerEnv("UPSTASH_REDIS_REST_TOKEN"),
+  })
+}
+
+const redis = createRedisClient()
 
 export interface StoredEndpoint {
   endpointId: string
@@ -15,6 +23,14 @@ export interface StoredEndpoint {
   originUrl: string
   pathPattern: string
   createdAt: string
+  status: string
+  visibility: "private" | "public"
+  verificationPath?: string
+  verificationUrl?: string
+  verifiedAt?: string | null
+  activatedAt?: string | null
+  paymentTxHash?: string | null
+  activationTxHash?: string | null
 }
 
 function endpointKey(endpointId: string): string {

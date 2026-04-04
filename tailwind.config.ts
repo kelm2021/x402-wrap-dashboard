@@ -9,8 +9,18 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        surface: "#0a0a0a",
-        accent: "#7c3aed"
+        surface: "#121210",
+        accent: "#C8942A",
+        brand: {
+          gold: "#C8942A",
+          "gold-bright": "#D4A84B",
+          black: "#1A1A1A",
+          parchment: "#F5F0E8",
+          slate: "#4A4A4A",
+          warm: "#8C857A",
+          red: "#C44536",
+          green: "#3D7A4A"
+        }
       }
     }
   },

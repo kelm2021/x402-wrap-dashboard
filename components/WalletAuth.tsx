@@ -27,7 +27,7 @@ export default function WalletAuth({ onAuth, onSignOut, isAuthenticated }: Walle
     setSigning(true)
     try {
       const { nonce } = await fetch("/api/auth/nonce").then((r) => r.json())
-      const message = `Sign in to x402-wrap: ${nonce}`
+      const message = `Sign in to AurelianFlo Wrapped: ${nonce}`
       const signature = await signMessageAsync({ message })
       const res = await fetch("/api/auth/verify", {
         method: "POST",
@@ -38,7 +38,7 @@ export default function WalletAuth({ onAuth, onSignOut, isAuthenticated }: Walle
         onAuth(address)
       }
     } catch {
-      // user rejected or error — stay unauthenticated
+      // user rejected or error - stay unauthenticated
     } finally {
       setSigning(false)
     }
@@ -51,7 +51,7 @@ export default function WalletAuth({ onAuth, onSignOut, isAuthenticated }: Walle
 
   return (
     <div className="flex items-center gap-3">
-      {signing && <span className="text-sm text-gray-400">Signing in…</span>}
+      {signing && <span className="text-sm text-[#A8A29E]">Signing in...</span>}
       <ConnectButton
         showBalance={false}
         accountStatus="address"
@@ -60,7 +60,7 @@ export default function WalletAuth({ onAuth, onSignOut, isAuthenticated }: Walle
       {isAuthenticated && !signing && (
         <button
           onClick={handleSignOut}
-          className="rounded-full border border-gray-700 px-3 py-1.5 text-xs text-gray-400 transition hover:border-gray-500 hover:text-white"
+          className="rounded-full border border-[#4A4A4A] px-3 py-1.5 text-xs text-[#A8A29E] transition hover:border-[#8C857A] hover:text-[#F5F0E8]"
         >
           Sign out
         </button>

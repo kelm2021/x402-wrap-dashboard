@@ -1,9 +1,14 @@
 import { SignJWT, jwtVerify } from "jose"
 import { cookies } from "next/headers"
+import { getRequiredServerEnv } from "@/lib/env"
 
-const secret = new TextEncoder().encode(
-  process.env.JWT_SECRET || "dev-secret-change-in-production-please"
-)
+function getSessionSecret(): Uint8Array {
+  return new TextEncoder().encode(
+    getRequiredServerEnv("JWT_SECRET", {
+      developmentFallback: "dev-secret-change-in-production-please",
+    }),
+  )
+}
 
 export interface SessionPayload {
   walletAddress: string
@@ -15,12 +20,12 @@ export async function createSession(walletAddress: string): Promise<string> {
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("7d")
-    .sign(secret)
+    .sign(getSessionSecret())
 }
 
 export async function verifySession(token: string): Promise<SessionPayload | null> {
   try {
-    const { payload } = await jwtVerify(token, secret)
+    const { payload } = await jwtVerify(token, getSessionSecret())
     return payload as unknown as SessionPayload
   } catch {
     return null
